@@ -14,7 +14,7 @@ CUSTOM_ID_ALREADY_EXISTS_MESSAGE = 'Имя "{name}" уже занято.'
 SHORT_ID_NOT_FOUND_MESSAGE = 'Указанный id не найден'
 
 
-@app.route('/api/id/',  methods=['POST'])
+@app.route('/api/id/', methods=['POST'])
 def add_new_link():
     data = request.get_json()
     if not data:
