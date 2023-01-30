@@ -1,16 +1,12 @@
 from flask import jsonify, request
 
-from . import app, db
+from . import app
 from .error_handlers import InvalidAPIUsage
 from .models import URLMap
-from .views import get_unique_short_id, URL_SYMBOLS
+
 
 NO_JSON_DATA = 'Отсутствует тело запроса'
 NO_URL_FIELD_MESSAGE = '"url" является обязательным полем!'
-INCORRECT_NAME_FOR_SHORT_LINK_MESSAGE = (
-    'Указано недопустимое имя для короткой ссылки'
-)
-CUSTOM_ID_ALREADY_EXISTS_MESSAGE = 'Имя "{name}" уже занято.'
 SHORT_ID_NOT_FOUND_MESSAGE = 'Указанный id не найден'
 
 
@@ -21,29 +17,16 @@ def add_new_link():
         raise InvalidAPIUsage(NO_JSON_DATA)
     if 'url' not in data:
         raise InvalidAPIUsage(NO_URL_FIELD_MESSAGE)
-    cutom_id = data.get('custom_id')
-    if cutom_id is None or data['custom_id'] == '':
-        data['custom_id'] = get_unique_short_id()
-    elif URLMap.query.filter_by(short=cutom_id).first():
-        raise InvalidAPIUsage(
-            CUSTOM_ID_ALREADY_EXISTS_MESSAGE.format(name=cutom_id)
-        )
-    elif len(cutom_id) > 16:
-        raise InvalidAPIUsage(INCORRECT_NAME_FOR_SHORT_LINK_MESSAGE)
-    else:
-        for letter in data['custom_id']:
-            if letter not in URL_SYMBOLS:
-                raise InvalidAPIUsage(INCORRECT_NAME_FOR_SHORT_LINK_MESSAGE)
-    urlmap = URLMap()
-    urlmap.from_dict(data)
-    db.session.add(urlmap)
-    db.session.commit()
-    return jsonify(urlmap.to_dict()), 201
+    try:
+        urlmap = URLMap.create_from_api(data)
+        return jsonify(urlmap.to_dict()), 201
+    except ValueError as error:
+        raise InvalidAPIUsage(str(error))
 
 
 @app.route('/api/id/<string:short_id>/')
 def get_original_link(short_id):
-    urlmap = URLMap.query.filter_by(short=short_id).first()
+    urlmap = URLMap.get_urlmap_by_short_link(short_id)
     if not urlmap:
         raise InvalidAPIUsage(SHORT_ID_NOT_FOUND_MESSAGE, 404)
     return jsonify(url=urlmap.original), 200
