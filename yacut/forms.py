@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, URLField
 from wtforms.validators import DataRequired, Length, Optional, Regexp, URL
 
-from settings import USER_SHORT_LINK_LENGTH, SHORT_LINK_PATTERN
+from settings import USER_SHORT_LINK_LENGTH, SHORT_LINK_PATTERN, MAX_URL_LENGTH
 
 CUSTOM_ID_PLACEHOLDER = 'Ваш вариант короткой ссылки'
 ORIGINAL_LINK_PLACEHOLDER = 'Длинная ссылка'
@@ -16,6 +16,7 @@ class URLmapForm(FlaskForm):
     original_link = URLField(
         ORIGINAL_LINK_PLACEHOLDER,
         validators=[
+            Length(max=MAX_URL_LENGTH),
             DataRequired(REQUIRED_FIELD_MESSAGE),
             URL(
                 require_tld=False,
