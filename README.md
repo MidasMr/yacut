@@ -53,6 +53,21 @@ Windows
 set FLASK_ENV=development
 ```
 
+Создать репозиторий с миграциями
+```
+flask db init 
+```
+
+Создать миграции
+```
+flask db migrate -m "message"
+```
+
+Применить изменения к базе данных
+```
+flask db upgrade
+```
+
 
 Стек технологий:
 ```

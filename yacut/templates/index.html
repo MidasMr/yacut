@@ -56,7 +56,7 @@
               {% endif %}
             {% endwith %}
             {% if short_link %}
-              {% with url = url_for('mapping_view', url=short_link, _external=True) %}
+              {% with url = url_for('mapping_view', short_link=short_link, _external=True) %}
                 <h5 class="text-center"> 
                   Ваша новая ссылка готова:
                   <a href="{{url}}">{{ url }}</a>

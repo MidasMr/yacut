@@ -13,6 +13,8 @@ def index_view():
     short = form.custom_id.data
 
     try:
+        if short:
+            URLMap.short_link_is_free(short)
         urlmap = URLMap.create(
             original=form.original_link.data,
             short=short
@@ -27,9 +29,9 @@ def index_view():
         return render_template('index.html', form=form)
 
 
-@app.route('/<string:url>')
-def mapping_view(url):
-    urlmap = URLMap.get_by_short_link(url)
+@app.route('/<string:short_link>')
+def mapping_view(short_link):
+    urlmap = URLMap.get_by_short_link(short_link)
     if urlmap is None:
         abort(404)
     return redirect(urlmap.original), 302
