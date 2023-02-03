@@ -84,11 +84,12 @@ class URLMap(db.Model):
 
     @staticmethod
     def create(original, short=None, validate=False):
+        if validate:
+            original = URLMap.validate_url(original)
         if not short:
             short = URLMap.get_unique_short_id()
         elif validate:
             short = URLMap.validate_short_link(short)
-            original = URLMap.validate_url(original)
         urlmap = URLMap(
             original=original,
             short=short
