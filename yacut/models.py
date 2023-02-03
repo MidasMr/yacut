@@ -1,19 +1,19 @@
 from datetime import datetime
 from random import sample
 import re
+from urllib.parse import urlparse
 
 from flask import url_for
 
 from . import db
 from settings import (
     SHORT_LINK_SYMBOLS, SHORT_LINK_ATTEMPS, SHORT_LINK_LENGTH,
-    MAX_URL_LENGTH, USER_SHORT_LINK_LENGTH, SHORT_LINK_PATTERN,
-    URL_PATTERN
+    MAX_URL_LENGTH, USER_SHORT_LINK_LENGTH, SHORT_LINK_PATTERN
 )
 
 
-API_CUSTOM_ID_ALREADY_EXISTS_MESSAGE = 'Имя "{name}" уже занято.'
-CUSTOM_ID_ALREADY_EXISTS_MESSAGE = 'Имя {name} уже занято!'
+CUSTOM_ID_ALREADY_EXISTS_MESSAGE = 'Имя "{name}" уже занято.'
+API_CUSTOM_ID_ALREADY_EXISTS_MESSAGE = 'Имя {name} уже занято!'
 INCORRECT_NAME_FOR_SHORT_LINK_MESSAGE = (
     'Указано недопустимое имя для короткой ссылки'
 )
@@ -49,24 +49,29 @@ class URLMap(db.Model):
     @staticmethod
     def short_link_is_free(short):
         if URLMap.get_by_short_link(short):
-            raise ValueError(
-                CUSTOM_ID_ALREADY_EXISTS_MESSAGE.format(name=short)
-            )
+            return False
         return True
 
     @staticmethod
     def validate_url(url):
-        if re.match(URL_PATTERN, url) is None:
+        if len(url) > MAX_URL_LENGTH:
             raise ValueError(INCORRECT_URL_MESSAGE)
-        return True
+        parsed_url = urlparse(url)
+        if not (parsed_url.scheme and parsed_url.netloc):
+            raise ValueError(INCORRECT_URL_MESSAGE)
+        return url
 
     @staticmethod
     def validate_short_link(short):
         if len(short) > USER_SHORT_LINK_LENGTH:
             raise ValueError(INCORRECT_NAME_FOR_SHORT_LINK_MESSAGE)
+        if not URLMap.short_link_is_free(short):
+            raise ValueError(
+                CUSTOM_ID_ALREADY_EXISTS_MESSAGE.format(name=short)
+            )
         if not re.fullmatch(SHORT_LINK_PATTERN, short):
             raise ValueError(INCORRECT_NAME_FOR_SHORT_LINK_MESSAGE)
-        return True
+        return short
 
     @staticmethod
     def get_by_short_link(short_link):
@@ -75,21 +80,19 @@ class URLMap(db.Model):
     @staticmethod
     def get_unique_short_id():
         for _ in range(SHORT_LINK_ATTEMPS):
-            url = ''.join(sample(SHORT_LINK_SYMBOLS, SHORT_LINK_LENGTH))
-            if URLMap.get_by_short_link(url):
+            short_link = ''.join(sample(SHORT_LINK_SYMBOLS, SHORT_LINK_LENGTH))
+            if not URLMap.short_link_is_free(short_link):
                 continue
-            return url
-        raise ValueError(SHORT_ID_GENERATION_ERROR_MESSAGE)
+            return short_link
+        raise RuntimeError(SHORT_ID_GENERATION_ERROR_MESSAGE)
 
     @staticmethod
     def create(original, short=None, validate=False):
         if not short:
             short = URLMap.get_unique_short_id()
         elif validate:
-            URLMap.validate_url(original)
-            URLMap.validate_short_link(short)
-        else:
-            URLMap.short_link_is_free(short)
+            short = URLMap.validate_short_link(short)
+        original = URLMap.validate_url(original)
         urlmap = URLMap(
             original=original,
             short=short

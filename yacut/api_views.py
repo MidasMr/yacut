@@ -18,13 +18,6 @@ def add_new_link():
     if 'url' not in data:
         raise InvalidAPIUsage(NO_URL_FIELD_MESSAGE)
     short = data.get('custom_id')
-    if short:
-        try:
-            URLMap.short_link_is_free(short)
-        except ValueError:
-            raise InvalidAPIUsage(
-                CUSTOM_ID_ALREADY_EXISTS_MESSAGE.format(name=short)
-            )
     try:
         urlmap = URLMap.create(
             original=data['url'],

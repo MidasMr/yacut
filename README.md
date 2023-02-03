@@ -60,7 +60,7 @@ flask db init
 
 Создать миграции
 ```
-flask db migrate -m "message"
+flask db migrate
 ```
 
 Применить изменения к базе данных

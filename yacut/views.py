@@ -4,6 +4,8 @@ from . import app
 from .forms import URLmapForm
 from .models import URLMap
 
+CUSTOM_ID_ALREADY_EXISTS_MESSAGE = 'Имя {name} уже занято!'
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index_view():
@@ -14,7 +16,9 @@ def index_view():
 
     try:
         if short:
-            URLMap.short_link_is_free(short)
+            if not URLMap.short_link_is_free(short):
+                flash(CUSTOM_ID_ALREADY_EXISTS_MESSAGE.format(name=short))
+                return render_template('index.html', form=form)
         urlmap = URLMap.create(
             original=form.original_link.data,
             short=short
