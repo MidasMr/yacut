@@ -1,7 +1,7 @@
 from datetime import datetime
+from urllib.parse import urlparse
 from random import sample
 import re
-from urllib.parse import urlparse
 
 from flask import url_for
 
@@ -13,7 +13,6 @@ from settings import (
 
 
 CUSTOM_ID_ALREADY_EXISTS_MESSAGE = 'Имя "{name}" уже занято.'
-API_CUSTOM_ID_ALREADY_EXISTS_MESSAGE = 'Имя {name} уже занято!'
 INCORRECT_NAME_FOR_SHORT_LINK_MESSAGE = (
     'Указано недопустимое имя для короткой ссылки'
 )
@@ -48,9 +47,7 @@ class URLMap(db.Model):
 
     @staticmethod
     def short_link_is_free(short):
-        if URLMap.get_by_short_link(short):
-            return False
-        return True
+        return not URLMap.get_by_short_link(short)
 
     @staticmethod
     def validate_url(url):
@@ -81,9 +78,8 @@ class URLMap(db.Model):
     def get_unique_short_id():
         for _ in range(SHORT_LINK_ATTEMPS):
             short_link = ''.join(sample(SHORT_LINK_SYMBOLS, SHORT_LINK_LENGTH))
-            if not URLMap.short_link_is_free(short_link):
-                continue
-            return short_link
+            if URLMap.short_link_is_free(short_link):
+                return short_link
         raise RuntimeError(SHORT_ID_GENERATION_ERROR_MESSAGE)
 
     @staticmethod
@@ -92,7 +88,7 @@ class URLMap(db.Model):
             short = URLMap.get_unique_short_id()
         elif validate:
             short = URLMap.validate_short_link(short)
-        original = URLMap.validate_url(original)
+            original = URLMap.validate_url(original)
         urlmap = URLMap(
             original=original,
             short=short

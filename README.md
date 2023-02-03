@@ -58,11 +58,6 @@ set FLASK_ENV=development
 flask db init 
 ```
 
-Создать миграции
-```
-flask db migrate
-```
-
 Применить изменения к базе данных
 ```
 flask db upgrade

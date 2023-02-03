@@ -15,10 +15,9 @@ def index_view():
     short = form.custom_id.data
 
     try:
-        if short:
-            if not URLMap.short_link_is_free(short):
-                flash(CUSTOM_ID_ALREADY_EXISTS_MESSAGE.format(name=short))
-                return render_template('index.html', form=form)
+        if short and not URLMap.short_link_is_free(short):
+            flash(CUSTOM_ID_ALREADY_EXISTS_MESSAGE.format(name=short))
+            return render_template('index.html', form=form)
         urlmap = URLMap.create(
             original=form.original_link.data,
             short=short
